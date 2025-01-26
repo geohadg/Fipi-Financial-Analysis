@@ -11,4 +11,4 @@ computers without python installed
 2. Export to a single consolidated csv file with fluff cleaned out
 3. Generated Charts with changeable parameters (i.e. Month and Year Selections, spending between categories, spending between accounts)
 4. Save graph as a .png
-* for now the only graph type embedded is a pie chart that changes labels for graphing categories between accounts but bar charts are coming
+for now the only graph type embedded is a pie chart that changes labels for graphing categories between accounts but bar charts are coming
