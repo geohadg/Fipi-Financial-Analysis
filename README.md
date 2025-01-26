@@ -15,6 +15,5 @@ computers without python installed
 for now the only graph type embedded is a pie chart that changes labels for graphing categories between accounts but bar charts are coming
 
 ## Notes
-For now the categorization feature is limited to recognizing vendors contained within a list inside Fipi, in the future this will be replaced by some form of NER combined with web scraping or something
-The graphs are limited to only Pie Charts for all parameter changes but do change labels in order to make data more digestable for certain config options, in the future this will be replaced with 
+For now the categorization feature is limited to recognizing vendors contained within a list inside Fipi, in the future this will be replaced by some form of NER combined with web scraping or something that wouldn't require a massive list of exact strings to compare against. The graphs are limited to only Pie Charts for all parameter changes but do change labels in order to make data more digestable for certain config options, in the future this will be replaced with 
 some form of adaptive graphing that uses different plot methods for different data selections
