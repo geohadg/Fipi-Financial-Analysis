@@ -1,0 +1,8 @@
+unwanted_categories = ["New Share Deposit", "Online Banking Transfer", "ACH Deposit", "ACH Withdrawal", "Interest", "Online Banking Deposit", "ACH Share Withdrawal", "ACH Share Deposit", "ACH Credit", "Dividend"]
+Groceries = ["DOLLAR GENERAL", "WAL-MART", "WALMART","WM SUPERCENTER", "DOLLAR GE", "PUBLIX", "DOLLAR TREE", "FAMILY DOLLAR", "CVS", "DOLLAR"]
+Restaurant = ["NOODLES", "MCDONALD'S", "WENDYS", "CHICK-FIL-A", "POPEYES", "TACO BELL", "AZTECA", "OLIVE GARDEN", "MCDONALDS", "WAFFLE HOUSE", "CULVERS", "BURGER KING", "SONIC", "PIZZA HUT", "DOMINOS", "SUBWAY", "JIMMY JOHNS", "CHIPOTLE", "PANDA EXPRESS", "KFC", "CHILIS", "RED LOBSTER", "IHOP", "STARBUCKS", "DUNKIN", "KRISPY KREME"]
+Gas = ["CUMBERLANDFARMS", "CEFCO", "CUMBERLAND FARMS", "TOM THUMB", "DODGE", "EXXON", "SHELL", "RACETRACK", "RACEWAY", "MOBILE", "BP", "CITGO", "CHEVRON", "7-ELEVEN", "7 ELEVEN", "7ELEVEN", "7-11"]
+ACHWhitdrawal = ["CreditOne", "WEBULL", "VENMO", "CASHAPP", "Stride Bank", "CASH APP", "CREDITONE"]
+fun = ["VENDING","ULTA", "TARGET", "MICHAELS", "2ND AND CHARLES", "BOOKS A MILLION", "HOT TOPIC", "SPENCER", "TOMMY GUNNS", "BEALLS", "MERCARI", "EBAY", "RADBAR", "CORDOVA MALL", "DESTIN COMMONS", "PLANET FI", "HIBBETT"]
+keys = ["Amazon", "Groceries", "Fast Food", "Gas", "Fun", "ACH Withdrawal", "Other"]
+Doctor = ["VISION HUB", "BEHEALTHY"]
