@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onedir --windowed --add-data "C:\Users\geoha\anaconda3\Lib\site-packages/customtkinter;customtkinter/"  "Fipi-Financial-Analysis.py" --icon=fipiicon.ico
+aepyinstaller --noconfirm --onedir --windowed --add-data "C:\Users\username\anaconda3\Lib\site-packages/customtkinter;customtkinter/"  "Fipi-Financial-Analysis.py" --icon=fipiicon.ico
