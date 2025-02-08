@@ -2,8 +2,9 @@ import pandas as pd
 # import datetime as dt
 import customtkinter as ctk
 import tkinter
-from PIL import Image, ImageTk
+from PIL import Image
 #import seaborn as sns
+from os import getcwd
 import matplotlib.pyplot as plt   
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
@@ -134,7 +135,8 @@ def Quicksilver(file):
         Quicksilver_df.loc[Quicksilver_df["Category"] == "Professional Services", "Category"] = "Other"
         Quicksilver_df.loc[Quicksilver_df["Category"] == "Internet", "Category"] = "Internet"
         Quicksilver_df.loc[Quicksilver_df["Category"] == "Payment/Credit", "Category"] = "ACH"
-        Quicksilver_df.loc[Quicksilver_df["Category"] == "Merchandise", "Category"] = "Merch"
+        Quicksilver_df.loc[Quicksilver_df["Category"] == "Merchandise", "Category"] = "Merchandise"
+        Quicksilver_df.loc[Quicksilver_df["Category"] == "Fee/Interest Charge", "Category"] = "Interest"
         Quicksilver_df.loc[Quicksilver_df["Description"].str.contains("AMAZON"), "Category"] = "Amazon"
 
         for f in fun:
@@ -167,9 +169,10 @@ def Savor(file):
         Savor_df.loc[Savor_df["Category"] == "Other Services", "Category"] = "Other"
         Savor_df.loc[Savor_df["Category"] == "Professional Services", "Category"] = "Other"
         Savor_df.loc[Savor_df["Category"] == "Internet", "Category"] = "Internet"
-        Savor_df.loc[Savor_df["Category"] == "Merchandise", "Category"] = "Merch"
+        Savor_df.loc[Savor_df["Category"] == "Merchandise", "Category"] = "Merchandise"
         Savor_df.loc[Savor_df["Category"] == "Payment/Credit", "Category"] = "ACH"
         Savor_df.loc[Savor_df["Description"].str.contains("AMAZON"), "Category"] = "Amazon"
+        Savor_df.loc[Savor_df["Category"] == "Fee/Interest Charge", "Category"] = "Interest"
 
         for f in fun:
             Savor_df.loc[Savor_df["Description"].str.contains(f), "Category"] = "Fun"
@@ -343,9 +346,9 @@ class HomeScreen(ctk.CTk):
         global image, background_image, handle_optionchange
         window_width, window_height = 1600, 700
 
-        icon = Image.open("C:\\Users\\geoha\\OneDrive\\Desktop\\my-official\\pythonpersf\\Fipi-Financial-Analysis\\fipiicon.ico")
-        photo = ImageTk.PhotoImage(icon)
-        self.iconphoto(True, photo) 
+        # icon = Image.open("C:\\Users\\geoha\\OneDrive\\Desktop\\my-official\\pythonpersf\\Fipi-Financial-Analysis\\fipiicon.ico")
+        # photo = ImageTk.PhotoImage(icon)
+        # self.iconphoto(True, photo) 
 
         '''                 Error Handling Functions                 '''
         def handle_fileError():
@@ -399,7 +402,7 @@ class HomeScreen(ctk.CTk):
                 if selections[key] == "Select Account Type" or selections[key] == '':
                     del selections[key]
             
-            print(selections)
+            
             fileslist = list(selections.keys())
             protocolslist = list(selections.values())
             outputlist = []
@@ -444,7 +447,7 @@ class HomeScreen(ctk.CTk):
 
                 save_file()
 
-            except FileNotFoundError:
+            except (FileNotFoundError, NameError, ValueError, KeyError):
                 handle_fileError()
 
 
@@ -514,19 +517,15 @@ class HomeScreen(ctk.CTk):
                 totalmonths.insert(0, "All")
                 totalyears.insert(0, "All")
 
-                # print(totalaccounts)
-
                 for i in range(len(totalyears)):
                     totalyears[i] = str(totalyears[i])
 
-                # print(totalyears)
                 
                 sums = []
 
                 for key in totalcategories:
                     sums.append(total[total["Category"] == key]["Amount"].sum())# if key in keys else None
 
-                print(sums)
                 graphpageselector()
                 self.yearoptionmenu.configure(values=totalyears)
                 self.monthoptionmenu.configure(values=totalmonths)
@@ -534,18 +533,156 @@ class HomeScreen(ctk.CTk):
                 self.accountoptionmenu.configure(values=totalaccounts)
                 graph(sums, totalcategories)
 
+                # ntotalyears = totalyears[1:]
+                # ntotalaccounts = totalaccounts[1:]
+               
+                
+                # for year in ntotalyears:
+                #     for a in ntotalaccounts:
+                #         newtotal = total.loc[total["Account"] == a]
+                #         newtotal = newtotal.loc[total["Year"] == int(year)]
+                #         ntotalcategories = list(newtotal.loc[newtotal["Category"] != '']["Category"].unique())
+                #         alist = []
+                #         print(f"        << Spending Summary on Account {a} for {year} >>\n")
+                #         for i in ntotalcategories:
+                #             alist.append(newtotal.loc[newtotal["Category"] == i]["Amount"].sum())
+                #             print(f'    ### {i} >> ${int(newtotal.loc[newtotal["Category"] == i]["Amount"].sum())}')
+
+                #         print(f"\n## You spent the least amount on {ntotalcategories[alist.index(min(alist))]} at ${int(min(alist))} ##")
+                #         print(f"## You spent the highest amount on {ntotalcategories[alist.index(max(alist))]} at ${int(max(alist))} ##")
+
+                        
+                #         print(f"\n## Total spend for {year} on Account {a} is >> ${int(newtotal['Amount'].sum())} ##\n\n ---------------------------------------------------------------------------------------------------------- \n")
+
+                # print(f"Your Highest spending category is {totalcategories[sums.index(max(sums))]} at ${int(max(sums))}")
+                # print(f"Your Lowest spending category is {totalcategories[sums.index(min(sums))]} at ${int(min(sums))}")
+                # print(f"Total Spending Across all Accounts for {ntotalyears} is ${int(total['Amount'].sum())}")       
+
+
                 return total, totalaccounts, totalcategories, totalyears, totalmonths, sums
                             
 
-            except FileNotFoundError:
+            except (FileNotFoundError, NameError, ValueError, KeyError):
                 handle_fileError()
 
+        
+        def generate_report():
+            global total
+            selections[self.textbox1.get('0.0', 'end').replace("\n", "")] = self.option1.get()
+            selections[self.textbox2.get('0.0', 'end').replace("\n", "")] = self.option2.get()
+            selections[self.textbox3.get('0.0', 'end').replace("\n", "")] = self.option3.get()
+            selections[self.textbox4.get('0.0', 'end').replace("\n", "")] = self.option4.get()
+            selections[self.textbox5.get('0.0', 'end').replace("\n", "")] = self.option5.get()
+            
+            for key in list(selections):
+                if selections[key] == "Select Account Type" or selections[key] == '':
+                    del selections[key]
+            
+            print(selections)
+            fileslist = list(selections.keys())
+            protocolslist = list(selections.values())
+            outputlist = []
+            try:
+                for i in range(len(fileslist)):
+                    if protocolslist[i] == "Eglin FCU":
+                        eglin_df = Eglin(fileslist[i])
+                        outputlist.append(eglin_df)
+
+                    if protocolslist[i] == "Wells Fargo":
+                        bilt_df = BILT(fileslist[i])
+                        outputlist.append(bilt_df)
+
+                    if protocolslist[i] == "AMEX Skymiles":
+                        amex_df = Amex(fileslist[i])
+                        outputlist.append(amex_df)
+
+                    if protocolslist[i] == "CapitalOne Quicksilver":
+                        quicksilver_df = Quicksilver(fileslist[i])
+                        outputlist.append(quicksilver_df)
+
+                    if protocolslist[i] == "CapitalOne Savor":
+                        savor_df = Savor(fileslist[i])
+                        outputlist.append(savor_df)
+
+                    if protocolslist[i] == "CapitalOne Checking":
+                        CapitalOneChecking_df = CapitalOneChecking(fileslist[i])
+                        outputlist.append(CapitalOneChecking_df)
+
+                    if protocolslist[i] == "Already Consolidated":
+                        alcons_df = alreadyconsolidated(fileslist[i])
+                        outputlist.append(alcons_df)
+
+                if len(outputlist) >1:
+                    total = pd.concat(outputlist)
+
+                elif len(outputlist) == 1:
+                    total = outputlist[0]
+
+                global totalaccounts, totalcategories, totalyears, totalmonths
+                
+                totalaccounts = list(total.loc[total["Account"] != '']["Account"].unique())
+                totalcategories = list(total.loc[total["Category"] != '']["Category"].unique())
+                totalcategories2 = list(total.loc[total["Category"] != '']["Category"].unique())
+                totalyears = list(total.loc[total["Year"] != '']["Year"].unique())
+                totalmonths = list(total.loc[total["Month"] != '']["Month"].unique())
+
+                totalaccounts.insert(0, "All")
+                totalcategories2.insert(0, "All")
+                totalmonths.insert(0, "All")
+                totalyears.insert(0, "All")
+
+                for i in range(len(totalyears)):
+                    totalyears[i] = str(totalyears[i])
+
+                
+                sums = []
+
+                for key in totalcategories:
+                    sums.append(total[total["Category"] == key]["Amount"].sum())# if key in keys else None
+
+                ntotalyears = totalyears[1:]
+                ntotalaccounts = totalaccounts[1:]
+                           
+                filepath = ctk.filedialog.asksaveasfile(
+                initialdir="Downloads",  
+                title="Select a File",  
+                filetypes=(("TXT files", "*.txt"), ("All files", "*.*")) 
+                )
+                if filepath:
+                    with open(filepath.name, "w") as f:
+                        for year in ntotalyears:
+                            for a in ntotalaccounts:
+                                newtotal = total.loc[total["Account"] == a]
+                                newtotal = newtotal.loc[total["Year"] == int(year)]
+                                ntotalcategories = list(newtotal.loc[newtotal["Category"] != '']["Category"].unique())
+                                alist = []
+                                f.write(f"<< Spending Summary on Account {a} for {year} >>\n\n")
+                                for i in ntotalcategories:
+                                    alist.append(newtotal.loc[newtotal["Category"] == i]["Amount"].sum())
+                                    f.writelines(f'    ### {i} >> ${int(newtotal.loc[newtotal["Category"] == i]["Amount"].sum())}\n')
+
+                                f.write(f"\n## You spent the least amount on {ntotalcategories[alist.index(min(alist))]} at ${int(min(alist))} ##\n")
+                                f.write(f"## You spent the highest amount on {ntotalcategories[alist.index(max(alist))]} at ${int(max(alist))} ##")
+
+                                
+                                f.write(f"\n## Total spend for {year} on Account {a} is >> ${int(newtotal['Amount'].sum())} ##\n\n---------------------------------------------------------------------------------------------------------- \n")
+
+                        f.write(f"Your Highest spending category is {totalcategories[sums.index(max(sums))]} at ${int(max(sums))}\n")
+                        f.write(f"Your Lowest spending category is {totalcategories[sums.index(min(sums))]} at ${int(min(sums))}\n")
+                        f.write(f"Total Spending Across all Accounts for {ntotalyears} is ${int(total['Amount'].sum())}\n")       
+
+                    self.reportsuccesslabel = ctk.CTkLabel(HomeScreen.frames["importpage"], text="Report Generated Successfully", font=("Terminal", 15))
+                    self.reportsuccesslabel.grid(row=8, column=0, columnspan=2)
+
+            except (FileNotFoundError, NameError, ValueError, KeyError):
+                handle_fileError()
 
         '''                 Setup Window                    '''
 
         global selections
         options = ["Already Consolidated", "Eglin FCU", "Wells Fargo", "CapitalOne Quicksilver", "CapitalOne Savor", "CapitalOne Checking", "AMEX Skymiles"]
         selections = {}
+        
         
 
         def importpageselector():
@@ -570,7 +707,13 @@ class HomeScreen(ctk.CTk):
         self.pagesframe = ctk.CTkFrame(self, height=window_height, width=window_width*0.2, fg_color="#121110")
         self.pagesframe.place(relx=0, relwidth=0.2, relheight=1)
 
-        self.fileexplorerbuttonimage = ctk.CTkImage(Image.open("C:\\Users\\geoha\\OneDrive\\Desktop\\my-official\\pythonpersf\\Fipi-Financial-Analysis\\fileexplorericon.png"), size=(30, 30))
+        currentpath = getcwd()
+        try:
+            self.fileexplorerbuttonimage = ctk.CTkImage(Image.open(currentpath+"/fileexplorericon.png"), size=(30, 30))
+
+        except FileNotFoundError:
+            self.fileexplorerbuttonimage = None
+
         self.geometry(f"{window_width}x{window_height}+100+300")
         self._set_appearance_mode("Dark")
 
@@ -602,14 +745,14 @@ class HomeScreen(ctk.CTk):
 
 
         self.aboutparagraphframe = ctk.CTkFrame(HomeScreen.frames["aboutpage"], height=window_height, width=window_width)
-        self.aboutparagraphframe.configure(border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a")
+        self.aboutparagraphframe.configure(fg_color="transparent", corner_radius=5, bg_color="#000000")
         self.aboutparagraphframe.pack(expand=True, fill="both")
         self.aboutparagraph = ctk.CTkLabel(self.aboutparagraphframe, text="Fipi was created by Donavin Geohagan\n\nIm just a Warehouse worker who codes on the side\n\nMy Github is https://github.com/geohadg")
         self.aboutparagraph2 = ctk.CTkLabel(self.aboutparagraphframe, text='Please give feedback this is the first real tool ive made!\nLeave a review at *wordpress site*!')
-        self.aboutparagraph3 = ctk.CTkLabel(self.aboutparagraphframe, text='\nThis tool is designed to help you analyze your financial data\n\nIt is a work in progress and will be updated regularly\nIncluding more Bank types!')
-        self.aboutparagraph.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#7d441a")
-        self.aboutparagraph2.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#7d441a")
-        self.aboutparagraph3.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#7d441a")
+        self.aboutparagraph3 = ctk.CTkLabel(self.aboutparagraphframe, text='\nThis tool is designed to help you analyze your financial data\n\nIt is a work in progress and will be updated regularly\nto include more Bank types!')
+        self.aboutparagraph.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#000000")
+        self.aboutparagraph2.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#000000")
+        self.aboutparagraph3.configure(text_color="#fcae74", font=("Terminal", 20), bg_color="#000000")
         self.aboutparagraph.pack(side=tkinter.TOP, pady=50)
         self.aboutparagraph2.pack(side=tkinter.TOP, pady=0)
         self.aboutparagraph3.pack(side=tkinter.TOP, pady=0)
@@ -622,11 +765,11 @@ class HomeScreen(ctk.CTk):
         
         self.option1 = ctk.StringVar(value="Select Account Type")
         self.optionmenu1 = ctk.CTkComboBox(HomeScreen.frames["importpage"], variable=self.option1, values=options)
-        self.optionmenu1.grid(row=1, column=2, sticky="n", padx=15, pady=0)
+        self.optionmenu1.grid(row=1, column=1, sticky="n", padx=15, pady=0)
         self.optionmenu1.configure(border_color="#fa852e", button_color="#fa852e", dropdown_fg_color="#7d441a", width=200, fg_color="#7d441a", font=("Terminal", 14), text_color="#fcae74", dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
 
 
-        self.filesearchbutton1 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox1), image=self.fileexplorerbuttonimage, width=10, height=10, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
+        self.filesearchbutton1 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox1), image=self.fileexplorerbuttonimage, width=30, height=30, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
         self.filesearchbutton1.grid(row=1, column=0, sticky="e", padx=0, pady=0)
 
         '''                 Line 2                    '''
@@ -636,10 +779,10 @@ class HomeScreen(ctk.CTk):
         
         self.option2 = ctk.StringVar(value="Select Account Type")
         self.optionmenu2 = ctk.CTkComboBox(HomeScreen.frames["importpage"], variable=self.option2, values=options, bg_color="transparent", button_color="#fa852e", fg_color="#212121", width=200)
-        self.optionmenu2.grid(row=2, column=2, sticky="n", padx=15, pady=20)
+        self.optionmenu2.grid(row=2, column=1, sticky="n", padx=15, pady=20)
         self.optionmenu2.configure(border_color="#fa852e", button_color="#fa852e", dropdown_fg_color="#7d441a", width=200, font=("Terminal", 14), fg_color="#7d441a", text_color="#fcae74", dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
 
-        self.filesearchbutton2 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox2), image=self.fileexplorerbuttonimage, width=10, height=10, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
+        self.filesearchbutton2 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox2), image=self.fileexplorerbuttonimage, width=30, height=30, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
         self.filesearchbutton2.grid(row=2, column=0, sticky="e", padx=0, pady=0)
 
         '''                 Line 3                    '''
@@ -649,10 +792,10 @@ class HomeScreen(ctk.CTk):
         
         self.option3 = ctk.StringVar(value="Select Account Type")
         self.optionmenu3 = ctk.CTkComboBox(HomeScreen.frames["importpage"], variable=self.option3, values=options, bg_color="transparent", button_color="#d01efc", fg_color="#212121", width=200)
-        self.optionmenu3.grid(row=3, column=2, sticky="n", padx=15, pady=10)
+        self.optionmenu3.grid(row=3, column=1, sticky="n", padx=15, pady=10)
         self.optionmenu3.configure(border_color="#fa852e", button_color="#fa852e", dropdown_fg_color="#7d441a", font=("Terminal", 14), width=200, fg_color="#7d441a", text_color="#fcae74", dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
 
-        self.filesearchbutton3 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox3), image=self.fileexplorerbuttonimage, width=10, height=10, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
+        self.filesearchbutton3 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox3), image=self.fileexplorerbuttonimage, width=30, height=30, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
         self.filesearchbutton3.grid(row=3, column=0, sticky="e", padx=0, pady=0)
 
         '''                 Line 4                     '''
@@ -662,10 +805,10 @@ class HomeScreen(ctk.CTk):
         
         self.option4 = ctk.StringVar(value="Select Account Type")
         self.optionmenu4 = ctk.CTkComboBox(HomeScreen.frames["importpage"], variable=self.option4, values=options, bg_color="transparent", button_color="#d01efc", fg_color="#212121", width=200)
-        self.optionmenu4.grid(row=4, column=2, sticky="n", padx=15, pady=20)
+        self.optionmenu4.grid(row=4, column=1, sticky="n", padx=15, pady=20)
         self.optionmenu4.configure(border_color="#fa852e", button_color="#fa852e", font=("Terminal", 14), dropdown_fg_color="#7d441a", width=200, fg_color="#7d441a", text_color="#fcae74", dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
 
-        self.filesearchbutton4 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox4), image=self.fileexplorerbuttonimage, width=10, height=10, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
+        self.filesearchbutton4 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox4), image=self.fileexplorerbuttonimage, width=30, height=30, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
         self.filesearchbutton4.grid(row=4, column=0, sticky="e", padx=0, pady=0)
 
         '''                 Line 5                    '''
@@ -675,23 +818,28 @@ class HomeScreen(ctk.CTk):
         
         self.option5 = ctk.StringVar(value="Select Account Type")
         self.optionmenu5 = ctk.CTkComboBox(HomeScreen.frames["importpage"], variable=self.option5, values=options, bg_color="transparent", button_color="#d01efc", fg_color="#212121", width=200)
-        self.optionmenu5.grid(row=5, column=2, sticky="n", padx=15, pady=10)
+        self.optionmenu5.grid(row=5, column=1, sticky="n", padx=15, pady=10)
         self.optionmenu5.configure(border_color="#fa852e", button_color="#fa852e", font=("Terminal", 14), dropdown_fg_color="#7d441a", width=200, fg_color="#7d441a", text_color="#fcae74", dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
 
-        self.filesearchbutton5 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox5), image=self.fileexplorerbuttonimage, width=10, height=10, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
+        self.filesearchbutton5 = ctk.CTkButton(HomeScreen.frames["importpage"], text="", command=lambda: addfilebutton(textbox=self.textbox5), image=self.fileexplorerbuttonimage, width=30, height=30, fg_color="transparent", hover_color="#7d441a", border_color="#fa852e", border_width=2)
         self.filesearchbutton5.grid(row=5, column=0, sticky="e", padx=0, pady=0)
 
-        '''                 Export and Confirm Buttons                  '''
+        '''                 Export and Graph Buttons                  '''
 
         self.exportbutton = ctk.CTkButton(HomeScreen.frames["importpage"], text="Export...", command=lambda: export_csv(selections=selections), font=("Terminal", 14), border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, width=150, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a")
         self.exportbutton.grid(row=6, column=0, sticky="w", padx=60, pady=20)
 
-        self.confirmbutton = ctk.CTkButton(HomeScreen.frames["importpage"], text="Graph",command=lambda: gatherinputs(selections=selections), font=("Terminal", 14), border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a", width=150)
-        self.confirmbutton.grid(row=6, column=0, sticky="w", padx=220, pady=20)
+        self.graphbutton = ctk.CTkButton(HomeScreen.frames["importpage"], text="Graph",command=lambda: gatherinputs(selections=selections), font=("Terminal", 14), border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a", width=150)
+        self.graphbutton.grid(row=6, column=0, sticky="w", padx=220, pady=20)
+        
+        '''                 Generate Report Button                  '''
+
+        self.generatereportbutton = ctk.CTkButton(HomeScreen.frames["importpage"], text="Generate Report", command=generate_report, font=("Terminal", 14), border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a", width=150)
+        self.generatereportbutton.grid(row=6, column=0, sticky="e", padx=90, pady=20)
 
         '''                 Warning Label for Type Already Consolidated                  '''
 
-        self.warninglabel = ctk.CTkLabel(HomeScreen.frames["importpage"], text="** Already Consolidated Type is only for Files Previously exported in Fipi", font=("Terminal", 12))
+        self.warninglabel = ctk.CTkLabel(HomeScreen.frames["importpage"], text="** Already Consolidated Type is only for Files Previously exported in Fipi", font=("Terminal", 12), text_color="#fcae74")
         self.warninglabel.grid(row=7, column=0, sticky="s", padx=15, pady=25)
 
         '''                 Title Label                 '''
@@ -756,7 +904,7 @@ class HomeScreen(ctk.CTk):
 
                 if len(totalcategories) > 1:
                     graph(sums, totalcategories)
-                    print(temp)
+                    
 
                 else:
                     totalcategories = list(temp.loc[temp["Category"] != '']["Category"].unique())
@@ -790,7 +938,7 @@ class HomeScreen(ctk.CTk):
 
                 
                 
-                print(temp)
+                
                 totalcategories = list(temp.loc[temp["Category"] != ""]["Category"].unique())
                 sums = []
 
@@ -808,41 +956,55 @@ class HomeScreen(ctk.CTk):
             """Produces a pie chart from given list of sums and labels"""
             
             self.ax.clear()
-            self.ax.legend(labels=[])
+            
             explodelist = []
+            displaysums = []
+            indexestodelete = []
+            s = sum(sums)
+            threshold = s*0.01
+            
+            for i in range(len(sums)):
+                displaysums.append(f"{keys[i]}: {str(int(sums[i]))}$")
+                sums[i] = sums[i].astype(int)
+                if sums[i] < threshold:
+                    indexestodelete.append(i)
+            
+            indexcount = 0
+            indexestodelete.sort(reverse=True)
+            for index in indexestodelete:
+                del keys[index]
+                del sums[index]
+                index = index - indexcount
+                indexcount += 1
+            
+
+          
 
             minsum = min(sums)
+            maxsum = max(sums)
             for i in range(len(sums)):
                 
-                if sums[i] == minsum:
-                    explodelist.append(0.1)
+                if sums[i] == minsum or sums[i] == maxsum:
+                    explodelist.append(0.2)
 
                 else:
                     explodelist.append(0)
-                    
-            
 
-            print(explodelist)
-            print(sums)
-            displaysums = []
-            s = sum(sums)
-
-            for i in range(len(sums)):
-                displaysums.append(f"{keys[i]}: {str(int(sums[i]))}$")
+            colors = ['#fcc98d', '#fcbd74', '#e98d6b', '#e3685c', '#d63c56', '#c93673', '#9e3460', '#8f3371', '#6c2b6d', '#511852']
+            def custom_label(pct):
+                return f'{pct:.0f}%' if pct > 2 else ''
 
 
-            _, texts =self.ax.pie(sums, labels=keys, explode=explodelist, labeldistance=1.2, radius=1.2, colors=['#fcc98d', '#fcbd74', '#e98d6b', '#e3685c', '#d63c56', '#c93673', '#9e3460', '#8f3371', '#6c2b6d', '#511852'], startangle=0)
+            _, texts, _ = self.ax.pie(sums, labels=keys, explode=explodelist, autopct=custom_label, labeldistance=1.1, radius=1.2, colors=colors, startangle=0)#, wedgeprops={'edgecolor': 'black', 'linewidth': 1})
             #autopct=lambda p: '{:.1f}%'.format(round(p)) if p > 1 else '',
             for key in texts:
                 key.set_color("#fcae74")
             
-
             self.ax.legend(bbox_to_anchor=(-0.95, 0.5), loc='center left', labels=displaysums)
             toolbar = NavigationToolbar2Tk(self.canvas, self.graphframe, pack_toolbar=False)
             toolbar.update()
             toolbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)   
             self.canvas.draw()
-            
             self.canvas.get_tk_widget().pack(side=tkinter.RIGHT, anchor="e", fill="x")
 
 
