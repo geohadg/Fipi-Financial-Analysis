@@ -7,5 +7,6 @@ pip install customtkinter
 pip install pandas
 pip install matplotlib
 pyinstaller --noconfirm --onedir --windowed "Fipi-Financial-Analysis.py" --icon=fipiicon.ico
-move fileexplorericon.png dist\Fipi-Financial-Analysis
+move fileexplorericonorange.png dist\Fipi-Financial-Analysis
+move fileexplorericongreen.png dist\Fipi-Financial-Analysis
 pause
