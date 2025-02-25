@@ -2,13 +2,15 @@ import pandas as pd
 import customtkinter as ctk
 import tkinter
 from PIL import Image
-from os import getcwd
-import matplotlib.pyplot as plt   
+from os import getcwd, remove
+import matplotlib.pyplot as plt  
+import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 graph_pallettes = {
     #'flare': ['#fcc98d', '#fcbd74', '#e98d6b', '#e3685c', '#d63c56', '#c93673', '#9e3460', '#8f3371', '#6c2b6d', '#511852'],
-    'flare':  ['#160b39', '#420a68', '#6a176e', '#932667', '#bc3754', '#dd513a', '#f37819', '#fca50a', '#f6d746', '#fcffa4'],
+    # 'flare':  ['#160b39', '#420a68', '#6a176e', '#932667', '#bc3754', '#dd513a', '#f37819', '#fca50a', '#f6d746', '#fcffa4'],
+    'flare':  ['#420a68', '#601394', '#6a176e', '#932667', '#bc3754', '#dd513a', '#f37819', '#fca50a', '#f6d746', '#fae375', '#fcffa4'],
     'forest':  ['#302652', '#372b61', '#46327e', '#365c8d','#277f8e', '#008f8f', '#1fa187', '#4ac16d', '#a0da39', '#bbf556', '#e3fa70']
                    }
 
@@ -44,7 +46,7 @@ Gas = ["CUMBERLANDFARMS", "CEFCO", "CUMBERLAND FARMS", "TOM THUMB", "DODGE", "EX
 ACHWhitdrawal = ["CreditOne", "WEBULL", "VENMO", "CASHAPP", "Stride Bank", "CASH APP", "CREDITONE"]
 fun = ["VENDING","ULTA", "TARGET", "MICHAELS", "2ND AND CHARLES", "BOOKS A MILLION", "HOT TOPIC", "SPENCER", "TOMMY GUNNS", "BEALLS", "MERCARI", "EBAY", "RADBAR", "CORDOVA MALL", "DESTIN COMMONS", "PLANET FI", "HIBBETT"]
 keys = ["Amazon", "Groceries", "Fast Food", "Gas", "Fun", "ACH Withdrawal", "Other"]
-Health = ["VISION HUB", "BEHEALTHY"]
+Health = ["VISION HUB", "BEHEALTHY", "ASPEN"]
 
 def Eglin(file):
     eglin_df = pd.read_csv(file)
@@ -141,6 +143,9 @@ def Quicksilver(file):
         Quicksilver_df.loc[Quicksilver_df["Category"] == "Fee/Interest Charge", "Category"] = "Interest"
         Quicksilver_df.loc[Quicksilver_df["Description"].str.contains("AMAZON"), "Category"] = "Amazon"
 
+        for a in ACHWhitdrawal:
+            Quicksilver_df.loc[Quicksilver_df["Description"].str.contains(a), "Category"] = "ACH"
+
         for f in fun:
             Quicksilver_df.loc[Quicksilver_df["Description"].str.contains(f), "Category"] = "Fun"
 
@@ -151,7 +156,7 @@ def Quicksilver(file):
         Quicksilver_df.drop(["Transaction Date", "Posted Date", "Card No.", "Debit", "Credit"], axis=1, inplace=True)
         Quicksilver_df.dropna(inplace=True)
         Quicksilver_df["Account"] = "Quicksilver"
-        
+        print(Quicksilver_df)
         return Quicksilver_df
     
     except KeyError:
@@ -172,7 +177,7 @@ def Savor(file):
         Savor_df.loc[Savor_df["Category"] == "Professional Services", "Category"] = "Other"
         Savor_df.loc[Savor_df["Category"] == "Internet", "Category"] = "Internet"
         Savor_df.loc[Savor_df["Category"] == "Merchandise", "Category"] = "Merchandise"
-        Savor_df.loc[Savor_df["Category"] == "Payment/Credit", "Category"] = "ACH"
+        Savor_df.loc[Savor_df["Category"] == "Payment/Credit", "Category"] = "ACH "
         Savor_df.loc[Savor_df["Description"].str.contains("AMAZON"), "Category"] = "Amazon"
         Savor_df.loc[Savor_df["Category"] == "Fee/Interest Charge", "Category"] = "Interest"
 
@@ -282,54 +287,6 @@ def alreadyconsolidated(file):
 
     return alcons
 
-# def sum_by_month(df, month):
-#     """Produces lists of sums and keys for each category in a given month"""
-#     sums = []
-#     df = df.query("Month == @month")
-#     if df.empty:
-#         print("No data for this month")
-#         return None
-    
-#     keys = list(df.loc[df["Category"] != '']["Category"].unique())
-#     for key in keys:
-#         sums.append(df[df["Category"] == key]["Amount"].sum()) if key in keys else None
-
-#     return sums, keys, df, month
-
-# def sum_by_year(df, category, year):
-#     """Produces lists of sums and keys for each category in a given month"""
-#     sums = []
-        
-#     if category == "All":
-#         pass
-
-#     elif category != "All":
-#         try:
-#             df = df.query("Category == @category")
-
-#         except None:
-#             return "No Data for your Selection"
-
-#     df = df.query("Year == @year")
-#     if df.empty:
-#         return "No data for your selection"
-    
-#     keys = list(df.loc[df["Category"] != '']["Category"].unique())
-#     for key in keys:
-#         sums.append(df[df["Category"] == key]["Amount"].sum()) if key in keys else None
-
-#     return sums, keys, df, year
-
-# def sum_by_category(df, category):
-#     """Sums all transactions in a given category"""
-
-#     df = df.query("Category == @category")
-#     if df.empty:
-#         return "No data for your selection"
-    
-#     sum = df["Amount"].sum()
-
-#     return sum, category, df
 
 """ GUI """
 
@@ -380,7 +337,10 @@ class HomeScreen(ctk.CTk):
 
             self.exportsuccesslabel = ctk.CTkLabel(self.msgframe, text="Exported to CSV Successful!", font=("Terminal", 15))
             self.exportsuccesslabel.grid(row=8, column=0, columnspan=2)
-            
+
+        def handle_empty_dataset():
+            self.emptydatasetlabel = ctk.CTkLabel(self.grapherrorframe, font=("Terminal", 14), text="The dataset for your selections is empty")
+            self.emptydatasetlabel.pack()
 
         '''                 File Explorer Dialogue Button                   '''
         def addfilebutton(textbox):
@@ -443,13 +403,18 @@ class HomeScreen(ctk.CTk):
                         outputlist.append(alcons_df)
 
                 total = pd.concat(outputlist)
-                
+
+
                 def save_file():
                     f = ctk.filedialog.asksaveasfile(mode='w', defaultextension=".csv")
                     if f is None: 
                         return 
-                
-                    total.to_csv(f.name)
+
+                    if f.name.__contains__(".csv"):
+                        total.to_csv(f.name)
+
+                    else:
+                        total.to_csv(f.name+".csv")
 
                 save_file()
                 handle_export_success()
@@ -539,23 +504,28 @@ class HomeScreen(ctk.CTk):
                 self.accountoptionmenu.configure(values=totalaccounts)
                 global current_pallette
                 current_pallette = self.colorpalletteswitch.get()
+
                 if self.colorpalletteswitch.get() == 0:
                     current_pallette = graph_pallettes["flare"]
-                    graph(sums, totalcategories, current_pallette)     
+                    graphpie(sums, totalcategories, current_pallette)     
 
                 else:
                     current_pallette = graph_pallettes["forest"]
-                    graph(sums, totalcategories, current_pallette)
+                    graphpie(sums, totalcategories, current_pallette)
 
                 return total, totalaccounts, totalcategories, totalyears, totalmonths, sums
                             
             except (FileNotFoundError, NameError, ValueError, KeyError) as e:
                 if self.textbox1.get('0.0', 'end').replace("\n", "") == "" or self.textbox2.get('0.0', 'end').replace("\n", "") == "" or self.textbox3.get('0.0', 'end').replace("\n", "") == "" or self.textbox4.get('0.0', 'end').replace("\n", "") == "" or self.textbox5.get('0.0', 'end').replace("\n", "") == "":
                     self.loggingtextbox.insert("0.0", "Please Select a File you left the box empty :)\n\n")
+                    self.nofilelabel = ctk.CTkLabel(self.msgframe, text="Please Select a File you left the box empty :)", font=("Terminal", 15))
+                    self.nofilelabel.grid(row=8, column=0, columnspan=2)
                     handle_fileError()
 
                 if self.option1.get() == "Select Account Type" or self.option2.get() == "Select Account Type" or self.option3.get() == "Select Account Type" or self.option4.get() == "Select Account Type" or self.option5.get() == "Select Account Type":
                     self.loggingtextbox.insert("0.0", "Please Select an Account Type you left the box empty :)\n\n")
+                    self.noaccountlabel = ctk.CTkLabel(self.msgframe, text="Please Select an Account Type you left the box empty :)", font=("Terminal", 15))
+                    self.noaccountlabel.grid(row=8, column=0, columnspan=2)
                     handle_fileError()
                 
                 else:
@@ -646,9 +616,10 @@ class HomeScreen(ctk.CTk):
                 if filepath:
                     with open(filepath.name, "w") as f:
                         for year in ntotalyears:
+                            newtotal = total.loc[total["Year"] == int(year)]
                             for a in ntotalaccounts:
-                                newtotal = total.loc[total["Account"] == a]
-                                newtotal = newtotal.loc[total["Year"] == int(year)]
+                                newtotal = newtotal.query("Account == @a")
+                                
                                 ntotalcategories = list(newtotal.loc[newtotal["Category"] != '']["Category"].unique())
                                 alist = []
                                 f.write(f"<< Spending Summary on Account {a} for {year} >>\n\n")
@@ -658,11 +629,14 @@ class HomeScreen(ctk.CTk):
 
                                 f.write(f"\n## You spent the least amount on {ntotalcategories[alist.index(min(alist))]} at ${int(min(alist))} ##\n")
                                 f.write(f"## You spent the highest amount on {ntotalcategories[alist.index(max(alist))]} at ${int(max(alist))} ##")
-                                f.write(f"\n## Total spend for {year} on Account {a} is >> ${int(newtotal['Amount'].sum())} ##\n\n---------------------------------------------------------------------------------------------------------- \n")
+                                f.write(f"\n## Total spend for {year} on Account {a} is >> ${int(newtotal['Amount'].sum())} ##\n\n----------------------------------------------------------------------------------------------------------\n\n")
 
+                        f.write(f"\n ----- Statistics for Entire Report -----")
                         f.write(f"Your Highest spending category is {totalcategories[sums.index(max(sums))]} at ${int(max(sums))}\n")
                         f.write(f"Your Lowest spending category is {totalcategories[sums.index(min(sums))]} at ${int(min(sums))}\n")
-                        f.write(f"Total Spending Across all Accounts for {ntotalyears} is ${int(total['Amount'].sum())}\n")       
+                        f.write(f"Total Spending Across all Accounts for {ntotalyears} is ${int(total['Amount'].sum())}\n") 
+                        f.write("\n------------------------------------------------------------------------- Complete Transaction Table -------------------------------------------------------------------------\n\n")      
+                        f.writelines(total.to_string())
 
                     handle_report_success()
 
@@ -719,7 +693,7 @@ class HomeScreen(ctk.CTk):
         self.title("Fipi Analysis Tool")
 
         '''                 Populating Pages Frame                  '''
-        self.pagesframetitle = ctk.CTkLabel(self.pagesframe, text="Fipi Analysis", font=("Terminal", 24), text_color="#fcae74")
+        self.pagesframetitle = ctk.CTkLabel(self.pagesframe, text="Spending Analysis", font=("Terminal", 24), text_color="#fcae74")
         self.pagesframetitle.place(relx=0.1, rely=0.02)
 
         self.importpagebutton = ctk.CTkButton(self.pagesframe, text="Import/Export", font=("Terminal", 15), text_color="#fcae74", height=35, width=180, command=importpageselector)
@@ -733,6 +707,9 @@ class HomeScreen(ctk.CTk):
         self.aboutpagebutton = ctk.CTkButton(self.pagesframe, text="About/Help", font=("Terminal", 15), text_color="#fcae74", height=35, command=aboutpageselector)
         self.aboutpagebutton.place(relx=0.05, rely=0.3, relwidth=0.9)
         self.aboutpagebutton.configure(border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a")
+
+        self.grapherrorframe = ctk.CTkFrame(HomeScreen.frames["graphpage"], height=35, width=500, fg_color="transparent")
+        self.grapherrorframe.pack()
 
         '''                 About Page                 ''' 
         tabview = ctk.CTkTabview(master=HomeScreen.frames["aboutpage"], width=window_width*0.6, height=window_height*0.8, fg_color="#1f1f1f")
@@ -873,6 +850,7 @@ class HomeScreen(ctk.CTk):
         self.warninglabel2.grid(row=7, column=0, sticky="s", padx=15, pady=25)
 
         '''                 Title Label                 '''
+
         self.titlelabel = ctk.CTkLabel(HomeScreen.frames["importpage"], text="Import Files", font=ctk.CTkFont(family='Terminal', size=25), text_color="#fcae74")
         self.titlelabel.grid(row=0, column=0, padx=100, pady=20, sticky="n")
 
@@ -882,6 +860,9 @@ class HomeScreen(ctk.CTk):
 
         self.graphdialogueframe = ctk.CTkFrame(HomeScreen.frames["graphpage"], height=40, width=window_width*0.7, fg_color="#000000")
         self.graphdialogueframe.pack(side=tkinter.TOP, anchor="center", pady=10)
+
+        self.graphthemeswitch = ctk.CTkSwitch(HomeScreen.frames["graphpage"], text="Theme", command=lambda: changepallettegreen() if self.graphthemeswitch.get() == 1 else changepalletteorange(), font=("Terminal", 14), fg_color="#fcae74", bg_color="#7d441a", corner_radius=5, width=150, height=35, text_color="#fcae74", border_color="#fa852e", border_width=4)
+        self.graphthemeswitch.pack(side=tkinter.TOP, anchor="e", padx=20)
 
         self.graphoptionframe = ctk.CTkFrame(HomeScreen.frames["graphpage"], height=70, fg_color='#000000', corner_radius=10)
         self.graphoptionframe.pack(anchor="center")
@@ -912,10 +893,7 @@ class HomeScreen(ctk.CTk):
         self.yearoptionmenu.grid(row=0, column=3, padx=10)
         self.yearoptionmenu.configure(border_color="#fa852e", button_color="#fa852e", dropdown_fg_color="#7d441a", width=160, fg_color="#7d441a", text_color="#fcae74", font=("Terminal", 14), dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
         
-        self.fig=plt.Figure(figsize=(100,100), dpi=100, facecolor="Black")
-        self.ax= self.fig.add_subplot(111)
-        self.canvas = FigureCanvasTkAgg(self.fig, self.graphframe)
-        self.canvas.draw()
+        
 
         def changepalletteorange():
             self.accountoptionmenu.configure(border_color="#fa852e", button_color="#fa852e", dropdown_fg_color="#7d441a", width=160, fg_color="#7d441a", text_color="#fcae74", font=("Terminal", 14), dropdown_font=("Terminal", 14), dropdown_text_color="#fca05b", button_hover_color="#7d441a", dropdown_hover_color="#7d441a")
@@ -956,7 +934,19 @@ class HomeScreen(ctk.CTk):
             tabview.configure(text_color="#fcae74", segmented_button_fg_color="#fcae74", segmented_button_selected_color="#1f1f1f", segmented_button_unselected_color="#000000", border_color="#fcae74", border_width=2, segmented_button_selected_hover_color="#1f1f1f", segmented_button_unselected_hover_color="#1f1f1f")
             self.loggingtextbox.configure(border_color="#fa852e")
             self.colorpalletteswitch.configure(border_color="#fa852e", fg_color="#fcae74", bg_color="#7d441a", corner_radius=5, width=150, height=35, text_color="#fcae74")
-            self.fileexplorerbuttonimage = ctk.CTkImage(Image.open(currentpath+"/fileexplorericonorange.png"), size=(30, 30))
+            self.savefigurebutton.configure(border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", text_color="#fcae74", hover_color="#7d441a")
+            global current_pallette
+            current_pallette = graph_pallettes["flare"]
+            self.graphthemeswitch.configure(border_color="#fa852e", fg_color="#fcae74", bg_color="#7d441a", corner_radius=5, width=150, height=35, text_color="#fcae74")
+            
+            try:
+                self.fileexplorerbuttonimage = ctk.CTkImage(Image.open(currentpath+"/fileexplorericonorange.png"), size=(30, 30))
+
+            except:
+                self.loggingtextbox.insert("0.0", f"Error: Could not find 'fileexplorericonorange.png'\n")
+                pass
+
+
             
             
 
@@ -999,31 +989,89 @@ class HomeScreen(ctk.CTk):
             tabview.configure(text_color="#00ff6b", segmented_button_fg_color="#00ff6b", segmented_button_selected_color="#1f1f1f", segmented_button_unselected_color="#000000", border_color="#00ff6b", border_width=2, segmented_button_selected_hover_color="#1f1f1f", segmented_button_unselected_hover_color="#1f1f1f")
             self.loggingtextbox.configure(border_color="#00ff38")
             self.colorpalletteswitch.configure(border_color="#00ff38", fg_color="#00ff6b", bg_color="#0d3818", corner_radius=5, width=150, height=35, text_color="#00ff6b")
-            self.fileexplorerbuttonimage = ctk.CTkImage(Image.open(currentpath+"/fileexplorericongreen.png"), size=(30, 30))
+            self.savefigurebutton.configure(border_color="#00ff38", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#0d3818", text_color="#00ff6b", hover_color="#0d3818")
+            global current_pallette
+            current_pallette = graph_pallettes["forest"]
+            self.graphthemeswitch.configure(border_color="#00ff38", fg_color="#00ff6b", bg_color="#0d3818", corner_radius=5, width=150, height=35, text_color="#00ff6b")
+
+            try:
+                self.fileexplorerbuttonimage = ctk.CTkImage(Image.open(currentpath+"/fileexplorericongreen.png"), size=(30, 30))
             
+            except:
+                self.loggingtextbox.insert('0.0', "Error: Could not find fileexplorericongreen.png\n")
+                pass
             
 
         def update_graph():
-            
+            for w in self.grapherrorframe.winfo_children():
+                    w.destroy()
             month = self.monthoptionmenu.get()
             year = self.yearoptionmenu.get()
             account = self.accountoptionmenuoption.get()
             category = self.categoryoptionmenu.get()
             temp = total
+
             if category != "All":
-                temp = temp.query("Category == @category")
-                totalcategories = list(temp.loc[temp["Account"] != '']["Account"].unique())
-                sums = []
-                for key in totalcategories:
-                    sums.append(temp.loc[temp["Account"] == key]["Amount"].sum())
+                if month == "All":
+                    pass
 
-                if len(totalcategories) > 1:
-                    graph(sums, totalcategories, current_pallette)
+                if month != "All":
+                    temp = temp.query("Month == @month")
+
+                if year == "All":
+                    pass
+
+                if year != "All":
+                    y = int(year)
+                    temp = temp.query("Year == @y")
+
+                if account == "All":
+                    graphsums = []
+                    graphkeys = []
+                    graphcolors = []
+                    graphlabels = []
+                    accounts = list(temp.loc[temp["Account"] != '']["Account"].unique())
+                    i = 2
+                    temp = temp.query("Category == @category")
+                    for account in accounts:
+                        temp2 = temp.query("Account == @account")
+                        
+                        sums = temp2["Amount"].tolist()
+                        keys = temp2["Date"].tolist()
+
+                        if len(sums) == 0:
+                            pass
+
+
+                        else:
+                            graphsums.append(sums)
+                            graphkeys.append(keys)
+                            graphcolors.append(current_pallette[i])
+                            graphlabels.append(f"{account}: {category}")
+                            
+                            i += 1
+
+                    print(temp)
+                    if len(graphsums) == 0:
+                        handle_empty_dataset()
                     
+                    if len(graphsums) > 0:
+                        if len(graphsums[0]) == 1:
+                            graphline(graphsums[0], graphkeys[0], graphcolors[0], graphlabels[0])
+                        
+                        if len(graphsums[0]) > 1:
+                            graphmultiplelines(graphsums, graphkeys, graphcolors, graphlabels)
 
-                else:
-                    totalcategories = list(temp.loc[temp["Category"] != '']["Category"].unique())
-                    graph(sums, totalcategories, current_pallette)
+                    
+                        
+
+                elif account != "All":
+                    temp = temp.query("Category == @category")
+                    temp = temp.query("Account == @account")
+                    sums = temp["Amount"].tolist()
+                    keys = temp["Date"].tolist()
+
+                    graphline(sums, keys, current_pallette[2], f"{account}: {category}")
 
             else:
                 if month != "All":
@@ -1044,25 +1092,38 @@ class HomeScreen(ctk.CTk):
                     temp = temp.query("Account == @account")
                     
 
-                elif account == "All":
-                    pass
-
-                if category == "All":
-                    pass
-
                 totalcategories = list(temp.loc[temp["Category"] != ""]["Category"].unique())
                 sums = []
 
                 for key in totalcategories:
                     sums.append(total[total["Category"] == key]["Amount"].sum())
 
-                graph(sums, totalcategories, current_pallette)
-                changepallettegreen()
+                graphpie(sums, totalcategories, current_pallette)
+                
+
+        def save_figure():
+            try: 
+                file = ctk.filedialog.asksaveasfile(mode='w', defaultextension=".png", filetypes=[("PNG file", "*.png")])
+                if file:
+                    self.fig.savefig(file.name)
+
+            except Exception as e:
+                self.loggingtextbox.insert(tkinter.END, f"Error: {e}\n")
+                handle_fileError()
+            
 
         self.updatebutton = ctk.CTkButton(self.graphdialogueframe, text="Update", command=update_graph, border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", font=("Terminal", 14), text_color="#fcae74", hover_color="#7d441a", width=150)        
-        self.updatebutton.grid(sticky='e', row=0, column=0, padx=150, pady=20)
+        self.updatebutton.grid(sticky='e', row=0, column=0, padx=0, pady=20)
 
-        def graph(sums, keys, pallete):
+        self.savefigurebutton = ctk.CTkButton(self.graphdialogueframe, text="Save Figure", command=save_figure, border_color="#fa852e", border_width=2, fg_color="transparent", corner_radius=5, bg_color="#7d441a", font=("Terminal", 14), text_color="#fcae74", hover_color="#7d441a", width=150)
+        self.savefigurebutton.grid(sticky='e', row=0, column=0, padx=300, pady=20)
+        
+        self.fig=plt.Figure(figsize=(100,100), dpi=100, facecolor="Black")
+        self.ax= self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, self.graphframe)
+        self.canvas.draw()
+
+        def graphpie(sums, keys, pallete):
             """Produces a pie chart from given list of sums and labels"""
             
             self.ax.clear()
@@ -1102,7 +1163,7 @@ class HomeScreen(ctk.CTk):
             def custom_label(pct):
                 return f'{pct:.0f}%' if pct > 2 else ''
 
-            _, texts, _ = self.ax.pie(sums, labels=keys, explode=explodelist, autopct=custom_label, labeldistance=1.1, radius=1.2, colors=pallete, startangle=0)#, wedgeprops={'edgecolor': 'black', 'linewidth': 1})
+            _, texts, _ = self.ax.pie(sums, labels=keys, explode=explodelist, autopct=custom_label, labeldistance=1.1, radius=1.2, colors=pallete, startangle=0, textprops={"fontsize": 14, "fontname": "power green"})#, wedgeprops={'edgecolor': 'black', 'linewidth': 1})
             #autopct=lambda p: '{:.1f}%'.format(round(p)) if p > 1 else '',
             if pallete == graph_pallettes["flare"]:
                 for key in texts:
@@ -1110,15 +1171,90 @@ class HomeScreen(ctk.CTk):
 
             if pallete == graph_pallettes["forest"]:
                 for key in texts:
-                    key.set_color("#fdfdfd")
+                    key.set_color("#00ff6b")
             
-            self.ax.legend(bbox_to_anchor=(-0.95, 0.5), loc='center left', labels=displaysums)
-            toolbar = NavigationToolbar2Tk(self.canvas, self.graphframe, pack_toolbar=False)
-            toolbar.update()
-            toolbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)   
+            # self.ax.legend(loc='best', labels=displaysums)
+            self.ax.legend(bbox_to_anchor=(-0.5, 0.1), loc='center left', labels=displaysums)
+            # toolbar = NavigationToolbar2Tk(self.canvas, self.graphframe, pack_toolbar=False)
+            # toolbar.update()
+            # toolbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)   
             self.canvas.draw()
             self.canvas.get_tk_widget().pack(side=tkinter.RIGHT, anchor="e", fill="x")
 
+        def graphmultiplelines(sums, keys, colors, label):
+        
+            self.ax.clear()
+            """Produces a line chart from given list of sums and labels"""
+            
+            for i in range(len(sums)):
+                if len(sums[i]) == 1:
+                    dates = pd.to_datetime(keys[i])
+                    self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y')) # Adjust the date format as needed
+                    self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+                    self.ax.plot(dates, sums[i], marker="o", color=colors[i])
+                    
+
+                else:
+                    dates = pd.to_datetime(keys[i])
+                    self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y')) # Adjust the date format as needed
+                    self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+                    
+                    self.ax.set_xlabel("Date", color="white")
+                    self.ax.set_ylabel("Amount", color="white")
+                    self.ax.tick_params(axis="x", colors="white", rotation=45)
+                    self.ax.tick_params(axis="y", colors="white")
+                    
+                    self.ax.plot(dates, sums[i], color=colors[i])
+           
+            self.ax.legend(loc="best", labels=label)
+            self.canvas.draw()
+            self.canvas.get_tk_widget().pack(side=tkinter.RIGHT, anchor="e", fill="x")
+
+        def graphline(sums, keys, color, label):
+            if len(sums) == 0:
+                handle_empty_dataset()
+
+            elif len(sums) == 1:
+                for w in self.grapherrorframe.winfo_children():
+                    w.destroy()
+
+                self.ax.clear()
+                dates = pd.to_datetime(keys)
+                self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y')) # Adjust the date format as needed
+                self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+                
+                self.ax.set_xlabel("Date", color="white")
+                self.ax.set_ylabel("Amount", color="white")
+                self.ax.tick_params(axis="x", colors="white", rotation=45)
+                self.ax.tick_params(axis="y", colors="white")
+                
+                self.ax.plot(dates, sums, marker="o", color=color, label=label)
+            
+                
+                self.canvas.draw()
+                self.canvas.get_tk_widget().pack(side=tkinter.RIGHT, anchor="e", fill="x")
+
+            else:
+                for w in self.grapherrorframe.winfo_children():
+                    w.destroy()
+
+                self.ax.clear()
+                dates = pd.to_datetime(keys)
+                self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y')) # Adjust the date format as needed
+                self.ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+                
+                self.ax.set_xlabel("Date", color="white")
+                self.ax.set_ylabel("Amount", color="white")
+                self.ax.tick_params(axis="x", colors="white", rotation=45)
+                self.ax.tick_params(axis="y", colors="white")
+                
+                self.ax.plot(dates, sums, color=color, label=label)
+            
+                
+                self.canvas.draw()
+                self.canvas.get_tk_widget().pack(side=tkinter.RIGHT, anchor="e", fill="x")
+
+            
 '''                 Start Main App Loop                 '''
 
 Home = HomeScreen()
